@@ -1,5 +1,6 @@
 import OutSideLinks from "@/components/OutSideLinks";
 import Counter from "@/app/local/Counter";
+import InsideLinks from "@/components/InsideLinks";
 
 const LocalStateUser = () => {
   return (
@@ -7,6 +8,8 @@ const LocalStateUser = () => {
       <h1 className="text-4xl">Local State User</h1>
       <Counter />
       <OutSideLinks />
+      <InsideLinks href="/global" />
+      <InsideLinks href="http://localhost:3000/global" />
     </main>
   );
 };
