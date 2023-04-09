@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 전역 상태나 캐시는 언제 유지되고 언제 리셋되는가?
 
-## Getting Started
+Redux, recoil, react-query, swr 의 전역 상태나 캐시는 언제 유지되고 언제 파괴될까?
 
-First, run the development server:
+다음과 같은 경우에 웹 브라우저는 페이지를 새로 실행하므로 전역변수나 캐시는 모두 초기화 상태가 된다. 웹앱을 종료시켰다 재실행하는 것과 동일한 효과가 발생한다:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+- 사용자가 URL 입력창에 URL을 입력했을 때
+  - 동일한 URL이라도 URL 입력창에서 엔터키를 치면 리로드와 동일한 효과가 발생한다
+- 새로고침(리로드, reload) 버튼을 클릭했을 때
+- 탭을 복재하면 새로 생긴 탭에서 웹앱은 새로 시작한다
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## \<a> 를 클릭했을 때
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`<a href="...">...</a>` 를 클릭하여 새로운 페이지로 이동할 때 기존 웹앱의 환경은 모두 사라지고 새로운 페이지가 실행될 것으로 예상된다. 그러나, 브라우저나 디바이스 환경에 따르다.
 
-[http://localhost:3000/api/hello](http://localhost:3000/api/hello) is an endpoint that uses [Route Handlers](https://beta.nextjs.org/docs/routing/route-handlers). This endpoint can be edited in `app/api/hello/route.ts`.
+- 기존 페이지 환경은 사라지고 새로운 페이지로 초기화
+  - PC(데스크탑)에서 크롬, 파이어폭스
+- 기존 페이지 환경이 유지되어 새로운 페이지를 보고 돌아와도 기존 페이지의 전역/캐시 상태가 유지됨
+  - PC(데스크탑)에서 사파리
+  - 모바일(아이폰): 크롬, 파이어폭스, 사파리
+  - 모바일(안드로이드): 확인 못함
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## \<Link> 를 클릭했을 때
 
-## Learn More
+Next.js 의 `<Link>`는 클라이언트의 상태를 유지하면서 라우트, 또는 페이지 이동을 할 수 있게 해준다. (`Client-side transitions between routes`)
+따라서, `<Link href="..."> ... </Link>`를 클릭했을 때 전역/캐시 상태가 유지되면서 새로운 페이지를 로딩하게 된다. 따라서 다시 뒤로 돌아갔을 때 이전 페이지의 바로 이전 상태가 유지된다.
 
-To learn more about Next.js, take a look at the following resources:
+단, href props 에 지정한 URL이 다른 사이트인 경우에는 `<a>` 와 동일한 결과를 보여주기도 한다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 기존 페이지 환경을 유지하면서 새로운 페이지 로딩(렌더링)
+  - path를 사용했거나 동일한 사이트 URL인 경우 모든 브라우저는 기존 환경을 유지
+  - 모바일용 크롬, 파이어폭스, 사파리, 그리고 PC용 사파리는 다른 사이트 URL이라도 기존 환경을 유지한다
+- 기존 페이지 환경이 사라지고 새로운 페이지로 초기화
+  - Url 이 다른 사이트인 경우
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## 브라우저별 전역/캐시 상태 유지
 
-## Deploy on Vercel
+크롬, 파이어폭스(PC)
+| | path | same site | other site |
+| --- | --- | --- | --- |
+| Link | O | O | X |
+| a | X | X | X |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+사파리(PC)
+| | path | same site | other site |
+| --- | --- | --- | --- |
+| Link | O | O | O |
+| a | O | O | O |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+크롬, 파이어폭스, 사파리(모바일)
+
+|      | path | same site | other site |
+| ---- | ---- | --------- | ---------- |
+| Link | O    |           | O          |
+| a    | O    |           | O          |
